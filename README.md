@@ -30,6 +30,10 @@ makap@makap:~$
 ![result](https://i.imgur.com/FGTYTMN.png)
 ![result](https://i.imgur.com/dngB3Bk.png)
 
+> IMPORTANT
+>
+> The exit action for stop docker containers its not working
+
 ## Key features
 
 - Convert YAML-described services into desktop apps (.desktop files on Linux)
