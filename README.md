@@ -1,6 +1,6 @@
 # makap
 
-> Make Applications Portable
+> Make Applications ~~Portable?~~
 
 makap is a small hybrid CLI + Electron helper that lets you turn services described in YAML
 into desktop "apps". It supports Docker Compose services and simple URLs and creates
