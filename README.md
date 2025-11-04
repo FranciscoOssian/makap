@@ -84,15 +84,15 @@ fields like the following:
 
 ```yaml
 services:
-	my-service:
-		Name: My Service
-		Icon: ./icon.png         # path relative to the YAML file (will be resolved)
-		Compose: ./docker-compose.yaml
-		URL: http://localhost:3000
-		Categories:
-			- Development
-			- Utility
-		Type: Application
+  my-service:
+    Name: My Service
+    Icon: ./icon.png # path relative to the YAML file (will be resolved)
+    Compose: ./docker-compose.yaml
+    URL: http://localhost:3000
+    Categories:
+      - Development
+      - Utility
+    Type: Application
 ```
 
 ## the service: Linux desktop entries format + Electron props
@@ -101,18 +101,17 @@ You can costumize the webview, but now its not working well.
 
 ```yaml
 services:
-	my-service:
-		Name: My Service
-		Icon: ./icon.png         # path relative to the YAML file (will be resolved)
-		Compose: ./docker-compose.yaml
-		URL: http://localhost:3000
-		Categories:
-			- Development
-			- Utility
-		Type: Application
-        AlwaysOnTop: True,
-        Opacity: 0.5
-
+  my-service:
+    Name: My Service
+    Icon: ./icon.png # path relative to the YAML file (will be resolved)
+    Compose: ./docker-compose.yaml
+    URL: http://localhost:3000
+    Categories:
+      - Development
+      - Utility
+    Type: Application
+    AlwaysOnTop: True,
+    Opacity: 0.5
 ```
 
 Notes:
