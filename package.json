@@ -1,0 +1,42 @@
+{
+  "name": "makap",
+  "version": "1.0.0",
+  "description": "Make Applications",
+  "main": "index.js",
+  "scripts": {
+    "cli": "node src/cli/agent/index.js",
+    "start": "electron src/cli/window/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/FranciscoOssian/makap.git"
+  },
+  "bin": {
+    "makap": "src/cli/agent/index.js",
+    "makap-window": "src/cli/window/index.js"
+  },
+  "keywords": [
+    "docker",
+    "desktop",
+    "entry-files"
+  ],
+  "author": "Francisco Ossian",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/FranciscoOssian/makap/issues"
+  },
+  "homepage": "https://github.com/FranciscoOssian/makap#readme",
+  "devDependencies": {
+    "electron": "^39.0.0"
+  },
+  "dependencies": {
+    "commander": "^14.0.2",
+    "i": "^0.3.7",
+    "ini": "^6.0.0",
+    "npm": "^11.6.2",
+    "windows-shortcuts": "^0.1.6",
+    "yaml": "^2.8.1"
+  },
+  "type": "module"
+}
