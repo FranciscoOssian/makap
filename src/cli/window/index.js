@@ -4,7 +4,8 @@ import pkg from "electron";
 import YAML from "yaml";
 import fs from "fs";
 import path from "path";
-import { fileURLToPath } from "url";
+import { makapDir } from "../../consts/index.js";
+import { mapConfigKeys } from "./mapConfigKeys.js";
 const { app, BrowserWindow } = pkg;
 
 import {
@@ -13,8 +14,19 @@ import {
 } from "../../service/dockerCompose/index.js";
 import { program } from "commander";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+async function waitForService(url, timeout = 20000) {
+  const start = Date.now();
+  while (Date.now() - start < timeout) {
+    try {
+      const res = await fetch(url);
+      if (res.ok) return true; // server is up
+    } catch (e) {
+      // server does not respond yet
+    }
+    await new Promise((r) => setTimeout(r, 1000));
+  }
+  throw new Error(`Timeout waiting for service: ${url}`);
+}
 
 program
   .name("Makap Window")
@@ -34,7 +46,8 @@ function service(serviceName) {
 
   app.whenReady().then(async () => {
     try {
-      const configPath = path.resolve(__dirname, "../../../store/config.yaml");
+      const configPath = path.join(makapDir, "config.yaml");
+      console.log(configPath);
       const file = fs.readFileSync(configPath, "utf8");
       const config = YAML.parse(file);
 
@@ -44,14 +57,13 @@ function service(serviceName) {
         return;
       }
 
-      console.log(serviceConfig);
-
       if (serviceConfig.hasOwnProperty("Compose")) {
         console.log("start", serviceConfig.Compose);
-        startCompose(serviceConfig.Compose);
+        await startCompose(serviceConfig.Compose);
       }
 
       if (serviceConfig.hasOwnProperty("URL")) {
+        await waitForService(serviceConfig.URL);
         const win = createWindow(serviceConfig);
         win.on("closed", async () => {
           if (serviceConfig.Compose) {
@@ -68,47 +80,6 @@ function service(serviceName) {
 }
 
 function createWindow(serviceConfig) {
-  const mapConfigKeys = {
-    width: 1200,
-    height: 800,
-    x: undefined,
-    y: undefined,
-    useContentSize: false,
-    center: false,
-    minWidth: undefined,
-    minHeight: undefined,
-    maxWidth: undefined,
-    maxHeight: undefined,
-    resizable: true,
-    movable: true,
-    minimizable: true,
-    maximizable: true,
-    closable: true,
-    focusable: true,
-    alwaysOnTop: false,
-    fullscreen: false,
-    fullscreenable: true,
-    simpleFullscreen: false,
-    skipTaskbar: false,
-    kiosk: false,
-    title: undefined,
-    icon: undefined,
-    show: true,
-    frame: true,
-    parent: undefined,
-    modal: false,
-    backgroundColor: undefined,
-    hasShadow: true,
-    opacity: 1,
-    thickFrame: true,
-    tabbingIdentifier: undefined,
-    autoHideMenuBar: true,
-    menuBarVisible: true,
-    titleBarStyle: "hidden",
-    titleBarOverlay: true,
-    trafficLightPosition: undefined,
-  };
-
   Object.keys(mapConfigKeys).map((key) => {
     const serviceKey = key.charAt(0).toUpperCase() + key.slice(1);
     serviceConfig.hasOwnProperty(serviceKey)

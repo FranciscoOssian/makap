@@ -12,7 +12,6 @@ import { startCompose } from "../service/dockerCompose/index.js";
 export async function up(serviceName) {
   function wakeUpApp() {
     return new Promise((resolve, reject) => {
-      console.log(__dirname);
       const proc = spawn("npm", ["run", "start", "up", serviceName], {
         stdio: "inherit",
         cwd: path.resolve(__dirname, "../../"),
@@ -29,13 +28,10 @@ export async function up(serviceName) {
     });
   }
 
-  const storePath = path.resolve(__dirname, "../store/config.yaml");
-
   const file = fs.readFileSync(
     path.resolve(__dirname, "../../store/config.yaml"),
     "utf8"
   );
-  console.log(file);
   const config = YAML.parse(file);
 
   if (!config["services"].hasOwnProperty(serviceName))

@@ -1,13 +1,14 @@
 services:
   n8n:
     Name: n8n
-    Icon: /home/ossian/repos/makap/example/n8n.png
-    Compose: /home/ossian/repos/makap/example/n8n.yaml
+    Icon: /home/ossian/.makap/icons/n8n.png
+    Compose: /home/ossian/.makap/compose/n8n.yaml
     URL: http://localhost:5678
     Type: Application
     Categories:
       - Development
       - Utility
+    Exec: bash /home/ossian/repos/makap/sh/makap.sh up n8n
   google:
     Name: Google
     URL: http://www.google.com.br

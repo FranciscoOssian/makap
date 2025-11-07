@@ -1,50 +1,58 @@
 # makap
 
-> Make Applications ~~Portable?~~
+> Make Applications — a small hybrid helper (CLI + Electron) to turn YAML-described services into desktop "apps".
 
-makap is a small hybrid CLI + Electron helper that lets you turn services described in YAML
-into desktop "apps". It supports Docker Compose services and simple URLs and creates
-desktop entries so services can be launched from the desktop environment.
+makap converts YAML service descriptions into desktop entries and helps you build and run Docker Compose services or open web UIs as standalone apps. Recent changes make `~/.makap` the recommended workspace: put your makap config (`config.yaml`), icons, and compose files there. Note: makap now treats paths in the config mostly as raw values and does not consistently resolve relative paths — using absolute paths in `config.yaml` is recommended.
 
-## Fast use
+## Quick start
 
-```shell
-makap@makap:~$ npm link
-makap@makap:~$ ls example/
-n8n_data  n8n.png  n8n.yaml  teste.yaml
-makap@makap:~$ makap build example/teste.yaml
-🔧 Starting build with config: /example/teste.yaml
-🔧 Yaml stored:  /store/config.yaml
+Store your makap configuration and assets under `~/.makap` (recommended). The main makap file should be `~/.makap/config.yaml`.
+
+Create directories and copy example files (adjust paths as needed):
+
+```bash
+mkdir -p ~/.makap/icons ~/.makap/compose
+cp example/config.yaml ~/.makap/config.yaml   # or your edited config
+cp example/n8n.png ~/.makap/icons/
+cp example/n8n.yaml ~/.makap/compose/
+```
+
+Then run build pointing to the config in `~/.makap`:
+
+```bash
+npm link        # optional during development to install the CLI globally
+makap build ~/.makap/config.yaml
+```
+
+Expected (short) output:
+
+```
+🔧 Starting build with config: /home/youruser/.makap/teste.yaml
 🔧 Starting build for: n8n
 ✅ (n8n) Build completed successfully!
 🌎 Creating desktop entry for: n8n
-🌎 Resolving path: n8n
-🔍: taget linux
-🌎 Creating desktop entry for: google
-🌎 Resolving path: google
-🔍: taget linux
-✅ (wakap) Build completed successfully!
-makap@makap:~$
+✅ Build completed successfully!
 ```
 
 ![result](https://i.imgur.com/FGTYTMN.png)
 ![result](https://i.imgur.com/dngB3Bk.png)
 
-> IMPORTANT
->
-> The exit action for stop docker containers its not working
+IMPORTANT:
+
+- Centralize artifacts in `~/.makap`: icons, compose files and the makap YAML (use `~/.makap/config.yaml`).
+- makap currently treats paths from the config as raw values and does not reliably resolve relative paths. Prefer absolute paths in `config.yaml` (for example `/home/ossian/.makap/icons/n8n.png`).
+- If your service uses Docker volumes for persistence (for example n8n), create the host directories used by the compose file manually and set appropriate ownership/permissions before starting containers. This avoids common permission errors when containers try to access mounted host directories.
 
 ## Key features
 
-- Convert YAML-described services into desktop apps (.desktop files on Linux)
-- Build and run Docker Compose services described in a makap YAML
-- Open service UIs in the default browser or inside an Electron BrowserWindow
-- Lightweight CLI for `build` and `up` flows
+- Convert YAML-described services into Linux desktop entries (`.desktop`).
+- Build and run Docker Compose services described in the YAML.
+- Open service UIs in an Electron BrowserWindow or in the default browser.
+- Lightweight CLI with `build` and `up` commands.
 
 ## Installation
 
-makap is a Node.js project that uses ES modules. For local development, clone the repo and
-install dependencies:
+Clone and install dependencies (development):
 
 ```bash
 git clone https://github.com/FranciscoOssian/makap.git
@@ -53,98 +61,107 @@ npm install
 npm link
 ```
 
-There are two main entry points exposed as CLI commands in `package.json`:
+Two commands are provided in `package.json`:
 
-- `makap` -> `src/cli/agent/index.js` (agent CLI for build/up)
+- `makap` -> `src/cli/agent/index.js` (agent CLI: build / up)
 - `makap-window` -> `src/cli/window/index.js` (Electron window runner)
 
-On Linux you can use the provided wrapper shell script which loads nvm for GUI sessions:
+On Linux there's a wrapper script `sh/makap.sh` that loads `nvm` for GUI sessions. Use it when launching Electron from graphical sessions that don't load your shell environment automatically:
 
 ```bash
-sh/makap.sh <args>
+sh/makap.sh up <service>
 ```
 
-## Usage
-
-Build a YAML config and create desktop entries:
+Or, after `npm link`:
 
 ```bash
-makap build /path/to/teste.yaml
+makap up <service>
+# or
+makap-window up <service>
 ```
 
-Start/run a service, see your desktop entrie created (only linux for now)
+## Recommended layout in ~/.makap
 
-The `build` command copies your YAML into `store/config.yaml`, builds compose services
-(if `Compose` is provided) and generates desktop entries under
-`~/.local/share/applications` on Linux.
+Place in `~/.makap`:
 
-The `up` command reads `store/config.yaml` and for a given service will start
-the compose (if present) and open the service UI (HTTPS or Localhost).
+- `config.yaml` (main makap config)
+- a directory for icons, e.g. `~/.makap/icons/`
+- a directory for compose files, e.g. `~/.makap/compose/`
+
+Example layout:
+
+```text
+~/.makap/
+├─ config.yaml
+├─ icons/
+│  └─ n8n.png
+└─ compose/
+  └─ n8n.yaml
+```
+
+Run the build pointing at `~/.makap/config.yaml`. Because makap treats config paths as raw, prefer absolute paths inside `config.yaml` (see example below).
+
+## Main commands
+
+- `makap build <path-to-config>`: use the makap config and create desktop entries where applicable; runs Compose build for referenced Compose files.
+- `makap up <service-name>`: reads the configuration and starts the service's compose (if present) and opens the UI.
+- `makap-window up <service-name>`: opens the service UI in an Electron window. Note: the internal Electron CLI is documented for inspection and testing, but in normal usage it's executed by the generated `.desktop` files.
 
 ## YAML format
 
-The YAML file must contain a top-level `services:` mapping. Each service may contain
-fields like the following:
+The config must contain a top-level `services:` mapping. Because makap now treats paths as raw values, use absolute paths in the config to avoid ambiguity. Example (this matches the example you tested locally):
 
 ```yaml
 services:
-  my-service:
-    Name: My Service
-    Icon: ./icon.png # path relative to the YAML file (will be resolved)
-    Compose: ./docker-compose.yaml
-    URL: http://localhost:3000
+  n8n:
+    Name: n8n
+    Icon: /home/ossian/.makap/icons/n8n.png
+    Compose: /home/ossian/.makap/compose/n8n.yaml
+    URL: http://localhost:5678
+    Type: Application
     Categories:
       - Development
       - Utility
+    Exec: bash /home/ossian/repos/makap/sh/makap.sh up n8n
+  google:
+    Name: Google
+    URL: http://www.google.com.br
     Type: Application
-```
-
-## the service: Linux desktop entries format + Electron props
-
-You can costumize the webview, but now its not working well.
-
-```yaml
-services:
-  my-service:
-    Name: My Service
-    Icon: ./icon.png # path relative to the YAML file (will be resolved)
-    Compose: ./docker-compose.yaml
-    URL: http://localhost:3000
-    Categories:
-      - Development
-      - Utility
-    Type: Application
-    AlwaysOnTop: True,
-    Opacity: 0.5
 ```
 
 Notes:
 
-- `Compose` should point to a
-  Docker Compose file.
-- `Exec` will be written into the generated `.desktop` file. Do not user this field.
+- `Compose` should point to a valid Docker Compose file (absolute path recommended).
+- `Icon` should be an absolute path (or a path you guarantee to exist). In practice, put icons under `~/.makap/icons/` and reference them with absolute paths.
+- `Exec` (if provided) will be written into the generated `.desktop` entry — it can point to the `sh/makap.sh` wrapper that launches the Electron window with the proper environment.
 
-## Desktop entry generation
+Persistence note:
 
-On Linux, makap generates `.desktop` files under `~/.local/share/applications`.
-The generator ensures list fields (like `Categories`) are serialized with trailing
-semicolons (`Development;Utility;`) as expected by the desktop specification.
+- If a service's compose mounts host directories for persistence (volumes), create those host directories manually and set ownership/permissions before starting the container (for example chown/chmod). makap does not automatically prepare host persistence directories or manage permissions for you.
+
+## Desktop entry generation (Linux)
+
+On Linux makap generates `.desktop` files under `~/.local/share/applications`. List fields such as `Categories` are serialized with trailing semicolons (e.g. `Development;Utility;`) according to the desktop entry spec.
+
+## Notes and limitations
+
+- The "stop" action (stopping/removing containers) may not work reliably on all environments — this is a known limitation to improve.
 
 ## Development
 
-Project layout (important files):
+Relevant files:
 
-- `src/cli/agent/index.js` - CLI entry (build / up)
-- `src/core/build.js` - handles build flow: copy yaml to `store`, run compose build and create desktop entries
-- `src/core/up.js` - handles start/up flow: reads `store/config.yaml`, runs compose up and opens UI
-- `src/service/dockerCompose/index.js` - wrappers for `docker compose` (build/up/down)
-- `src/service/desktopEntry/linux.js` - generates `.desktop` files for Linux
-- `src/cli/window/index.js` - Electron BrowserWindow runner
-- `sh/makap.sh` - wrapper shell that sources nvm for GUI sessions
+- `src/cli/agent/index.js` — CLI entry (build / up)
+- `src/core/build.js` — build flow and desktop entry creation
+- `src/core/up.js` — starts services (compose / opens UI)
+- `src/service/dockerCompose/index.js` — wrappers for `docker compose`
+- `src/service/desktopEntry/*` — desktop entry generators
+- `src/cli/window/index.js` — Electron runner
+- `sh/makap.sh` — wrapper for graphical sessions on Linux
 
-### Running locally
+### Testing locally
 
-To run the Electron window CLI for testing:
+To test the Electron window during development:
 
 ```bash
 npx electron src/cli/window/index.js up <service>
@@ -152,7 +169,7 @@ npx electron src/cli/window/index.js up <service>
 
 ## Contributing
 
-Contributions are welcome. Open an issue or PR describing the improvement. This project was completed in a short time, and therefore has many flaws to fill and improvements to be made.
+Contributions welcome. Open an issue or a PR describing your change.
 
 ## License
 
